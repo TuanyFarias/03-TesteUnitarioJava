@@ -2,6 +2,7 @@ package contabancaria;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -97,37 +98,187 @@ class ContaTest {
     //    - Depósito com valor negativo lança IllegalArgumentException
     //    - Depósito em conta inativa lança IllegalStateException
     // =======================================================
+    @Test 
+    void test_depositar_valido() {
+        var conta = new Conta("Antonio", 100);
+        conta.depositar(50);
 
+        assertEquals(150, conta.getSaldo());
+    }
 
-    // =======================================================
-    //  Testes para sacar
-    //  Sugestão de testes:
-    //    - Saque com valor válido atualiza o saldo
-    //    - Saque com valor maior que saldo lança IllegalStateException
-    //    - Saque com valor zero lança IllegalArgumentException
-    //    - Saque com valor negativo lança IllegalArgumentException
-    //    - Saque em conta inativa lança IllegalStateException
-    // =======================================================
+    @Test
+    void test_depositar_zero() {
+        var conta = new Conta("Maria", 45);
 
+        assertThrows(IllegalArgumentException.class, () -> conta.depositar(0));
 
-    // =======================================================
-    //  Testes para transferir
-    //  Sugestão de testes:
-    //    - Transferência válida atualiza saldo de ambas as contas
-    //    - Transferência com saldo insuficiente lança exceção
-    //    - Transferência com valor zero/negativo lança exceção
-    //    - Transferência com conta origem inativa lança exceção
-    //    - Transferência com conta destino inativa lança exceção
-    // =======================================================
+        assertEquals(45, conta.getSaldo());
+    }
 
+    @Test
+    void test_depositar_negativo() {
+        var conta = new Conta("Maria", 45);
 
-    // =======================================================
-    //  Testes para encerrar
-    //  Sugestão de testes:
-    //    - Encerrar conta com saldo zero funciona
-    //    - Encerrar conta com saldo lança IllegalStateException
-    //    - Encerrar conta já inativa lança IllegalStateException
-    //    - Conta encerrada tem isAtiva() == false
-    // =======================================================
+        assertThrows(IllegalArgumentException.class, () -> conta.depositar(-5));
 
+        assertEquals(45, conta.getSaldo());
+    }
+
+   
+    @Test 
+    void test_sacar_valido() {
+        var conta = new Conta("Luana", 100); 
+        conta.sacar(40);
+
+        assertEquals(60, conta.getSaldo());
+    }
+
+    @Test 
+    void test_sacar_zero() {
+        var conta = new Conta("Karina", 100);
+
+        assertThrows(IllegalArgumentException.class, () -> conta.sacar(0));
+
+        assertEquals(100, conta.getSaldo());
+    }
+
+    @Test 
+    void test_sacar_negativo() {
+        var conta = new Conta("Karina", 100);
+
+        assertThrows(IllegalArgumentException.class, () -> conta.sacar(-85));
+
+        assertEquals(100, conta.getSaldo());
+    }
+
+    @Test 
+    void sacar_acima_saldo() {
+        var conta = new Conta("Marina", 100);
+
+        assertThrows(IllegalStateException.class, () -> conta.sacar(101));
+
+        assertEquals(100, conta.getSaldo());
+    }
+
+    @Test
+    void sacar_conta_inativa() {
+        var conta = new Conta("Marina", 0); 
+
+        conta.encerrar(); // Considerando que o encerramento seja permitido
+
+        assertThrows(IllegalStateException.class, () -> conta.sacar(40));
+        assertEquals(false, conta.isAtiva());
+    }
+
+    @Test 
+    void encerrar() {
+        var conta = new Conta("Larissa", 0);
+
+        conta.encerrar();
+
+        assertEquals(false, conta.isAtiva());
+    }
+
+    @Test 
+    void encerrar_saldo() {
+        var conta = new Conta("Jaja", 56);
+
+        assertThrows(IllegalStateException.class, () -> conta.encerrar());
+
+        assertEquals(true, conta.isAtiva());
+        assertEquals(56, conta.getSaldo());
+    }
+
+    @Test 
+    void encerrar_duas() {
+        var conta = new Conta("Larissa", 0);
+
+        conta.encerrar();
+
+        assertEquals(false, conta.isAtiva());
+
+        assertThrows(IllegalStateException.class, () -> conta.encerrar());
+
+        assertEquals(false, conta.isAtiva());
+    }
+
+    @Test 
+    void encerrada_conta() {
+        var conta = new Conta("Luiza", 0);
+        conta.encerrar();
+
+        assertThrows(IllegalStateException.class, () -> conta.depositar(80));
+
+        assertEquals(false, conta.isAtiva());
+    }
+
+    @Test 
+    void transferir() {
+        var conta1 = new Conta("Juarez", 200);
+        var conta2 = new Conta("Kila", 100);
+
+        conta1.transferir(conta2, 50);
+
+        assertEquals(150, conta1.getSaldo());
+        assertEquals(150, conta2.getSaldo());
+    }
+
+    @Test
+    void transferirZero() {
+        var conta1 = new Conta("Juarez", 200);
+        var conta2 = new Conta("Kila", 100);
+
+        assertThrows(IllegalArgumentException.class, () -> conta1.transferir(conta2, 0));
+
+        assertEquals(200, conta1.getSaldo());
+        assertEquals(100, conta2.getSaldo());
+    }
+
+    @Test
+    void transferirNegativo() {
+        var conta1 = new Conta("Juarez", 200);
+        var conta2 = new Conta("Kila", 100);
+
+        assertThrows(IllegalArgumentException.class, () -> conta1.transferir(conta2, -50));
+
+        assertEquals(200, conta1.getSaldo());
+        assertEquals(100, conta2.getSaldo());
+    }
+
+    @Test
+    void transferirAcimaDoSaldo() {
+        var conta1 = new Conta("Juarez", 200);
+        var conta2 = new Conta("Kila", 100);
+
+        assertThrows(IllegalStateException.class, () -> conta1.transferir(conta2, 201));
+
+        assertEquals(200, conta1.getSaldo());
+        assertEquals(100, conta2.getSaldo());
+    }
+
+    @Test
+    void transferirContaOrigemInativa() {
+        var conta1 = new Conta("Juarez", 0);
+        var conta2 = new Conta("Kila", 100);
+
+        conta1.encerrar();
+
+        assertThrows(IllegalStateException.class, () -> conta1.transferir(conta2, 50));
+
+        assertEquals(0, conta1.getSaldo());
+        assertEquals(100, conta2.getSaldo());
+    }
+
+    @Test
+    void transferirContaDestinoInativa() {
+        var conta1 = new Conta("Juarez", 200);
+        var conta2 = new Conta("Kila", 0);
+
+        conta2.encerrar();
+
+        assertThrows(IllegalStateException.class, () -> conta1.transferir(conta2, 50));
+
+        assertEquals(200, conta1.getSaldo());
+        assertEquals(0, conta2.getSaldo());
+    }
 }
